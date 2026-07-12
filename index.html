@@ -200,6 +200,7 @@ body.touch .mbtn{display:flex}
 #bossCard .bc-name{margin-top:9px;font:700 19px var(--serif,serif);color:#ff6b6b;text-shadow:0 2px 8px #000;letter-spacing:.05em}
 #bossCard .bc-line{font-size:12px;color:#ffd0c0;opacity:.92;margin:3px auto 0;max-width:240px;line-height:1.4}
 #bossname{font-size:14px;letter-spacing:.3em;color:var(--red);text-align:center;margin-bottom:4px;font-family:var(--serif);text-shadow:2px 2px 0 #000}
+#bossface{position:absolute;left:-4px;bottom:-3px;width:44px;height:68px;object-fit:contain;object-position:bottom center;filter:drop-shadow(0 2px 7px rgba(0,0,0,.7));display:none;pointer-events:none;z-index:1}
 #bosshp{height:14px;background:#000;border:3px solid #000;box-shadow:0 3px 0 #000}
 #bosshp i{display:block;height:100%;background:linear-gradient(180deg,#ff9a9a,var(--red));transition:width .2s steps(4)}
 
@@ -357,6 +358,9 @@ body.intd #hud,body.intd .mbtn,body.intd #dashbtn,body.intd #joy{display:none!im
 .tbtn.final{background:var(--red);color:#fff;border-bottom-color:#8f2222}
 .tbtn.endless{background:linear-gradient(120deg,#b07ce8,#7a4ec0);color:#fff;border-bottom-color:#5a3a90}
 .tbtn:disabled{opacity:.38;pointer-events:none}
+.tbtn.has-scene{color:#f4e4b8;background-color:#101018;border-bottom-color:#c9a64a;text-shadow:0 1px 4px rgba(0,0,0,.92);min-height:54px;background-repeat:no-repeat}
+.tbtn.has-scene.final{color:#ffdada;border-bottom-color:#d05656}
+.tbtn.has-scene:hover{filter:brightness(1.14)}
 .foot-tiers{align-items:center}
 .foot-cap{font-family:var(--mono);font-size:9px;letter-spacing:.28em;color:var(--gold-deep,#8a6a2a);
   text-transform:uppercase;align-self:center;writing-mode:initial;opacity:.85}
@@ -511,7 +515,7 @@ body.intd #hud,body.intd .mbtn,body.intd #dashbtn,body.intd #joy{display:none!im
 <div class="mbtn" id="skbtn0">✦</div>
 <div class="mbtn" id="skbtn1">✦</div>
 <div class="mbtn" id="flaskbtn"><img src="assets/myskme/skill_warm.webp" width="30" height="30" alt="" style="display:block" onerror="this.style.display='none'"></div>
-<div id="bossbar"><div id="bossname">叶王</div><div id="bosshp"><i style="width:100%"></i></div></div>
+<div id="bossbar"><img id="bossface" alt=""><div id="bossname">叶王</div><div id="bosshp"><i style="width:100%"></i></div></div>
 <div id="bossCard"></div>
 <div id="hint" onclick="if(MODE==='town')interact()"></div>
 <div id="joy"><div id="joyknob"></div></div>
@@ -1195,7 +1199,7 @@ function cardDexView(id){
 }
 function closeCardDex(){var ov=document.getElementById('ovDex');if(ov)ov.classList.remove('on');}
 const LORE_SECTIONS=[{"key": "prologue", "title": "楔子 · 风暴前夜", "subtitle": "序章 · Prologue · 摘自狼先生未公开私人笔记 编号0531", "prose": "那一夜，狼先生没有睡。一只信鸽落在窗台，脚环系着一片紫色蛇鳞——那是叶王的请柬，也是宣战；鸽子飞走时，远处天空裂开一道极细的缝，像有人在另一边偷偷看了一眼。他从鹿皮袋里取出刻着 MYSKME 的铜印，呵一口气，按在纸上。「该到了。」他对空房间说。窗外，五月最后一片银杏叶，悄悄变成了金色。", "items": [{"name": "狼先生学院", "desc": "不强制、不评分，只在你最想放弃那天把你拉起来"}, {"name": "叶王的请柬", "desc": "一片紫蛇鳞，既是邀约也是宣战"}, {"name": "MYSKME 铜印", "desc": "磨得锃亮、几乎照出人影的开学信物"}]}, {"key": "realms", "title": "三国鼎立 · 每一国都觉得自己是对的", "subtitle": "Three Realms in Conflict · 学院 / 黑域 / 灰塔", "prose": "学院、黑域、灰塔，三方都自称在救人，三方都各有伤口。学院只做一件事——在你最想放弃那天让你想再打一场；黑域叶王织一张比所有网都精致的网，让人心甘情愿走进去；灰塔鹦鹉学院信奉「正确答案只有一个」，把知识灌进去、把沉默当服从。中立者游走于三国之间，是终战前各方都想拉拢的变量。", "items": [{"name": "学院之地 · 光明学徒", "desc": "现编：睿琳涵海浩麒瑾晰屿诺佳欣；招新：月铎文晓炜荣洋璐。谁掉队都不肯丢下的那一边"}, {"name": "黑域 · 叶王集团（蛇女王）", "desc": "叶王首脑·璇引诱者·慧追随·菀半叛入·航献祭者·音边缘游荡。最锋利的武器是让人自愿入笼"}, {"name": "灰塔 · 鹦鹉学院", "desc": "鹦鹉教授领军，七月携「童声复读机」卷土重来，与叶王二度密盟；马将军已脱离"}, {"name": "中立 · 摇摆与游荡者", "desc": "炜、荣、洋编为摇摆队、阵营未定；璐独立受教带来哼唱；音在西墙之外游离"}]}, {"key": "timeline", "title": "编年 · 全卷八章", "subtitle": "The Serial · 连载至第五章（编纂：诺·佳·涵 / 定稿：一）", "prose": "全卷八章，第一章从一只茶壶开始，终章在仲夏夜的火里收场。前四章已完结，第五章正在连载，后三章只放出预告——跟所有还没写完的故事一样，最要命的总在「下一章」。关键节点：05·31 本卷启 / 06·15 新人到 / 07·14 鹦鹉归 / 07·30 航之祭 / 08·15 仲夏夜。", "items": [{"name": "第一章 · 立学之初（约十年前）", "desc": "一柱一壶、五人自来。狼先生把茶端给最先到的琳，她一待就是十年"}, {"name": "第二章 · 越界之罪（三年前）", "desc": "翻车鱼少年屿化鸟越界，与游学的诺在断云上对视一眼，引海天七月浅战；狼先生独行云阶换停火，留下未愈剑伤"}, {"name": "第三章 · 黑化之始（一年前）", "desc": "叶王初现石墙、菀消失一个清晨；璇被收下又带走发小慧，黑域始具雏形"}, {"name": "第四章 · 紫光面具（八个月前）", "desc": "中立的蛇男航看了面具七昼夜，第八天清醒地自己戴上，眼里从此只剩叶王"}, {"name": "第五章 · 此刻 · 五月末（连载中）", "desc": "诺与琳越走越近；音首次脱体翻出西墙；璇潜回推航走完最后一步；狼先生重写七年未满的招新名单"}, {"name": "第六章 · 六月 · 新人到（预告）", "desc": "月铎文晓炜荣洋璐自己找上门；月铎已向蛇女王下战书，炜荣洋阵营未定"}, {"name": "第七章 · 七月 · 雷动（预告）", "desc": "鹦鹉携童声复读机归来、与叶王二度密盟；月底航完成第一次献祭，笑着倒下"}, {"name": "终章 · 八月十五 · 仲夏夜（待更新）", "desc": "无名之原，三界共燃。四股黑潮汇于一夜——那一夜没有月亮也没有星，所有的光都来自地上的人"}]}, {"key": "bonds", "title": "羁绊与绑死 · 护你的，也拽你下沉的", "subtitle": "Bonds & Bindings · 七条羁绊，三向上四向下", "prose": "七条羁绊，三条让人更强，四条让人下坠。能毁掉一个人的，往往正是他最舍不得放手的那一根。最稳的关系长在沉默里，最致命的关系藏在自愿里。", "items": [{"name": "慢生 · 诺×琳", "desc": "菀消失后，琳每天放一杯热茶在诺桌角、从不停留。第七天一句谢谢，第六十天成了彼此最稳的那根——不轰烈，只是真实地长出来"}, {"name": "至死的痴恋 · 航→叶王", "desc": "暗王蛇血脉的航把全部奉出。叶王从未索求，这才最致命；他将在仲夏夜化作她手里最长的一根钉"}, {"name": "灵魂的另一面 · 琳/音", "desc": "没人知道她俩是一人还是两人。五月末音第一次没回到琳体内，翻出西墙游荡——曾是同一个人，如今互为最怕的那一面"}, {"name": "引诱者 · 璇↣慧 / 航", "desc": "璇不属于任何 CP，她是别人 CP 的引擎。先带走发小慧，再让航自己走完那条路：「我只是让水比他们以为的要近」"}, {"name": "静伴 · 月×慧", "desc": "同为天秤、同为风象，一个留在学院灯下，一个随璇走进紫阴。月在窗台多放一只杯子，茶每天只凉一半，谁都不提"}, {"name": "未完之约 · 菀…？", "desc": "她一页页变透明，最后走进雨里——没死，也没真属于叶王。诺把没写完的笔记本递给她，她接过、转身"}, {"name": "淬炼成伴 · 晰×屿", "desc": "从针锋相对到最佳搭档。都是挨过打却没倒下的人，认出了彼此；晰拿了满分，第一个鼓掌的是曾处处作对的屿"}]}, {"key": "mysteries", "title": "悬案 · 尚未写完的几页", "subtitle": "Open Files · 连「一」也没敢定稿的六页", "prose": "这卷编年史里留着六页空白。不是忘了写，是写不下去——每一页背后都站着一个还没回家的人，或一个还没揭开的盖子。线索都在，答案都不在。", "items": [{"name": "FILE 01 · 佳，去哪了", "desc": "三月随狼先生采集古卷，于边境沼泽一入不返。默书只留「下落不明」。分头时她回头喊：「水不凉。别跟过来。」"}, {"name": "FILE 02 ·「一」究竟是谁", "desc": "天鹅女「一」，没人见过两次，笔不蘸墨蘸的是空气里的某种东西。本卷中途她将彻底消失——这一页是她亲手写的"}, {"name": "FILE 03 · 菀，既没死也没活", "desc": "一页页变透明、走进雨里。日记第88页空白没敢写，诺每晚把本子压在枕下；偶尔有人在没有作者的诗里读到她的句子"}, {"name": "FILE 04 · 紫光面具从何而来", "desc": "叶王放在石头上，航看七昼夜后自戴。没人知道最初是谁做的；摘下它只需一个比叶王更愿听航说话的人——学院还没有"}, {"name": "FILE 05 · 那条没有刻度的经线", "desc": "狼先生书房的老航海图上有一条没标度数的经线，恰好穿过每个学徒的家乡。他来自风从三方吹来的南半球岛国，抽屉压着鹤师未拆的旧信"}, {"name": "FILE 06 · 仲夏夜谁能站着回来", "desc": "八月十五无名之原，十年来三国首次同地。预言只写到这里就停了，「一」的定稿本停在八月十四的夜里"}]}, {"key": "prophecy", "title": "终章 · 仲夏夜必至之歌", "subtitle": "Prophecy · 八月十五 · 无名之原 · 三界共燃", "prose": "春末藏着一根针，没人看见它在哪里，但所有人的脚都开始疼。八月十五，紫色的火从一个男孩身上起来——他笑着倒下，因为终于派上了用场；雨里有人转身，但她已不再有形，诺把笔记本递出去，笔记本变成了她。狼先生最后一句：「我们不是为了赢这场，我们只是不让那些不该消失的人，消失得那么彻底。」", "items": [{"name": "四股黑潮", "desc": "叶王的紫蛇大军、鹦鹉的复读军团、暗化的音、献祭后的航，汇于一夜"}, {"name": "光明一侧", "desc": "狼先生、五位新人、所有现存学生，加白鹤宰相借出的天之国援军与屿带回的海域同盟"}, {"name": "叶王真面目", "desc": "一条网纹蟒，从不公开宣布主张。她让人清醒地献出自己、再自愿带上锁——这才是黑域最锋利的武器"}, {"name": "那一夜没有月也没有星", "desc": "所有的光，都来自地上的人。MYSKME · Volvme II · 完 · Make Yourself Special & Kind"}]}];
-function showLore(){var ov=document.getElementById('ovLore');if(!ov)return;var h='<div class="ov-inner" style="max-width:600px;max-height:92vh;overflow:auto;text-align:left;padding-bottom:84px">';h+='<div class="pix-title" style="text-align:center">世界编年史</div>';h+='<div class="pix-sub" style="text-align:center;margin-bottom:4px">狼先生与他的学生们 · Volvme II · 三界编年</div>';LORE_SECTIONS.forEach(function(sec){h+='<div class="menu-sec" style="margin-top:18px">'+sec.title+'</div>';if(sec.subtitle)h+='<div class="pix-sub" style="opacity:.55;margin:-2px 0 9px;font-size:10.5px">'+sec.subtitle+'</div>';if(sec.prose)h+='<div style="font-size:12.5px;opacity:.9;line-height:1.85;margin-bottom:11px">'+sec.prose+'</div>';(sec.items||[]).forEach(function(it){h+='<div class="shop-row"><div class="shop-info"><div class="shop-name">'+it.name+'</div><div class="shop-desc">'+(it.desc||'')+'</div></div></div>';});});h+='</div><button class="ov-close" onclick="closeLore()">✕</button><div class="ov-foot"><button class="pbtn alt" onclick="closeLore()">返 回</button></div>';ov.innerHTML=IZ(h);ov.classList.add('on');ov.scrollTop=0;}
+function showLore(){var ov=document.getElementById('ovLore');if(!ov)return;var h='<div class="ov-inner" style="max-width:600px;max-height:92vh;overflow:auto;text-align:left;padding-bottom:84px">';h+='<div class="pix-title" style="text-align:center">世界编年史</div>';h+='<div class="pix-sub" style="text-align:center;margin-bottom:4px">狼先生与他的学生们 · Volvme II · 三界编年</div>';LORE_SECTIONS.forEach(function(sec){h+='<div class="menu-sec" style="margin-top:18px">'+sec.title+'</div>';var _po=CHAP_POSTER[sec.key];if(_po){var _p6=CHAP_DIR+_po+'-640.webp',_pf=CHAP_DIR+_po+'.webp';h+='<img src="'+_p6+'" srcset="'+_p6+' 640w, '+_pf+' 1280w" sizes="(max-width:640px) 90vw, 560px" alt="" style="width:100%;border-radius:6px;margin:8px 0 4px;border:1px solid rgba(201,166,74,.28);box-shadow:0 5px 20px rgba(0,0,0,.5);display:block" onerror="this.style.display=\'none\'">';}if(sec.subtitle)h+='<div class="pix-sub" style="opacity:.55;margin:-2px 0 9px;font-size:10.5px">'+sec.subtitle+'</div>';if(sec.prose)h+='<div style="font-size:12.5px;opacity:.9;line-height:1.85;margin-bottom:11px">'+sec.prose+'</div>';(sec.items||[]).forEach(function(it){h+='<div class="shop-row"><div class="shop-info"><div class="shop-name">'+it.name+'</div><div class="shop-desc">'+(it.desc||'')+'</div></div></div>';});});h+='</div><button class="ov-close" onclick="closeLore()">✕</button><div class="ov-foot"><button class="pbtn alt" onclick="closeLore()">返 回</button></div>';ov.innerHTML=IZ(h);ov.classList.add('on');ov.scrollTop=0;}
 function closeLore(){var ov=document.getElementById('ovLore');if(ov)ov.classList.remove('on');}
 function cardDexFoil(id){var fx=document.getElementById('cdexfoilfx'),b=document.getElementById('cdexfoilbtn'),im=document.getElementById('cdexbig');if(!fx)return;if(fx.classList.contains('on')){fx.classList.remove('on');if(im)im.style.boxShadow='0 8px 28px rgba(0,0,0,.55)';if(b)b.textContent='\u2726 \u95ea \u5361 \u7248';}else{fx.classList.add('on');if(im)im.style.boxShadow='0 10px 40px rgba(255,205,117,.55)';if(b)b.textContent='\u6807 \u51c6 \u7248';}}
 /* ============ 兽人像素立绘 · 程序化生成 ============ */
@@ -2840,10 +2844,23 @@ function spawnBoss(fid){spawnFoe(fid,mapW/2,150);
   bossBanner(foes[foes.length-1],FOES[fid].line,'#ef4d4d');}
 let _bossCardT=null;
 const BOSS_CARD_IDS=['hui','yin','hang','xuan','parrot','ye'];
+/* —— 章节美术接线（Codex 2026-07-12 交付 · 一律「有新图则用、缺则回退旧占位」）—— */
+const CHAP_DIR='assets/hub/expedition-chapter-art-20260712/web/';
+const BOSS_ART_IDS=['ye','xuan','parrot','hang']; // 这四个有 Codex 新透明立绘
+function bossArtURL(fid){return BOSS_ART_IDS.indexOf(fid)>=0?CHAP_DIR+'boss-'+fid+'.webp':'';}
+// 章节选择场景（关卡索引→场景图 basename；i=3 无尽无场景）。缺图=只剩暗底渐变，天然回退。
+const STAGE_ART={0:'stage-0-snakeforest',1:'stage-1-greytower',2:'stage-2-cagedblade',4:'stage-4-namelessvale'};
+function stageBg(i){return STAGE_ART[i]?`background-image:linear-gradient(rgba(9,9,13,.58),rgba(9,9,13,.80)),url('${CHAP_DIR}${STAGE_ART[i]}-640.webp');background-size:cover;background-position:center;`:'';}
+// 编年史章节海报（lore section key → 海报 basename）。缺图=onerror 隐藏，不影响文字。
+const CHAP_POSTER={prologue:'chapter-prologue',mysteries:'chapter-mask',bonds:'chapter-sacrifice',prophecy:'chapter-midsummer'};
+// 主线头目专属遗物 → Codex 遗物图标（按 UNIQUES 键匹配）。缺图=回退通用槽位图标。
+const RELIC_ART={xuan_fang:'relic-tooth',parrot_echo:'relic-echo',ye_mask:'relic-mask',rift100:'relic-genesis'};
 function bossCardReveal(fid,name,line){
   if(BOSS_CARD_IDS.indexOf(fid)<0)return;
   var e=document.getElementById('bossCard');if(!e)return;
-  e.innerHTML=IZ('<img src="assets/cards/'+fid+'-full.jpg" alt="" onerror="this.style.display=\'none\'"><div class="bc-name">'+(name||'')+'</div>'+(line?'<div class="bc-line">'+line+'</div>':''));
+  var ba=bossArtURL(fid),card='assets/cards/'+fid+'-full.jpg',src=ba||card;
+  // 新立绘失败 → 退角色卡 jpg → 再失败隐藏
+  e.innerHTML=IZ('<img src="'+src+'" alt="" onerror="if(this.src.indexOf(\'boss-\')>=0){this.src=\''+card+'\'}else{this.style.display=\'none\'}"><div class="bc-name">'+(name||'')+'</div>'+(line?'<div class="bc-line">'+line+'</div>':''));
   e.classList.add('on');
   if(_bossCardT)clearTimeout(_bossCardT);
   _bossCardT=setTimeout(function(){var x=document.getElementById('bossCard');if(x)x.classList.remove('on');},2600);
@@ -2852,6 +2869,9 @@ function bossBanner(f,line,color){
   bossCardReveal(f.fid,f.name,line);
   $('#bossbar').classList.add('on');
   $('#bossname').textContent=f.name;
+  var bf=$('#bossface'),ba=bossArtURL(f.fid);
+  if(ba){bf.onerror=function(){bf.style.display='none'};bf.onload=function(){bf.style.display='block'};bf.src=ba;}
+  else{bf.style.display='none';bf.removeAttribute('src');}
   flash(f.boss?'red':'purple');shake();
   toast((f.boss?'⚡ BOSS 出现！！':'⚡ 强敌来袭！')+' '+line);
   startBgm(f.fid==='ye'?'final':'boss');
@@ -4431,7 +4451,8 @@ function showSelect(){
   const mkTier=(t,i)=>{
     const open=t.endless?META.wins[2]>0:i<=META.tierOpen;
     const star=t.endless?(META.endlessBest?` 最深${META.endlessBest}层`:''):(META.wins[i]?` ★${META.wins[i]}`:'');
-    return `<button class="tbtn ${i===2?'final':''} ${t.endless?'endless':''}" ${open?'':'disabled'} title="${t.name}"
+    const sb=stageBg(i);
+    return `<button class="tbtn ${i===2?'final':''} ${t.endless?'endless':''} ${sb?'has-scene':''}" ${open?'':'disabled'} title="${t.name}" style="${sb}"
       onclick="pickTier(${i})">${open?'':LOCKI}${TIER_SHORT[i]}${star}</button>`;};
   const mainTiers=[0,1,2].map(i=>mkTier(TIERS[i],i)).join('');
   const endIdx=TIERS.findIndex(t=>t.endless);
@@ -4540,12 +4561,20 @@ const TAL_KEY={hp:'tea',atk:'blade',spd:'boot',armor:'stone',crit:'sun',dash:'li
 const UP_KEY={atk:'blade',hp:'tea',spd:'boot',rate:'time',crit:'sun',range:'feather',leech:'candy',thorn:'shield',gold:'gold_leaf',dash:'lightning',heart:'bond',multi:'star'};
 function rarFrame(rar){var k='rw_rarity_'+(RAR_KEY[rar]||'common');return ART[k]?'<img src="'+ART[k]+'" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:132%;height:132%;pointer-events:none">':'';}
 function eqIcon(slot){var k='rw_eq_'+(EQ_KEY[slot]||'blade');return ART[k]?'<img src="'+ART[k]+'" style="width:30px;height:30px;position:relative;z-index:1">':(ICN_EQ[slot]?svgI(ICN_EQ[slot]):EQ_SLOTS[slot].ico);}
+// 具名遗物优先用 Codex 遗物图标；失败回退通用槽位图标（缺图零改码生效）
+function itemIcon(it){
+  if(it&&it.unique&&RELIC_ART[it.unique]){
+    var ru=CHAP_DIR+RELIC_ART[it.unique]+'.webp',fb=ART['rw_eq_'+(EQ_KEY[it.slot]||'blade')]||'';
+    return '<img src="'+ru+'" style="width:32px;height:32px;position:relative;z-index:1" onerror="this.onerror=null;'+(fb?"this.src='"+fb+"'":"this.style.display='none'")+'">';
+  }
+  return eqIcon(it.slot);
+}
 function talIcon(id){var k='tal_'+(TAL_KEY[id]||'');return ART[k]?'<img src="'+ART[k]+'" style="width:30px;height:30px">':(ICN_TAL[id]?svgI(ICN_TAL[id]):'');}
 // 叠光塔方块 = 纯数字 + tier 配色 + 程序化光芯(.mtile::before)；旧的头像贴片 mergeIcon/MERGE_FACE 已移除
 function itemRowHTML(it,equipped,idx){
   const r=RARS[it.rar];
   return `<div class="shop-row${it.rar>=6?' myth':it.rar===5?' darkgold':''}" style="border-color:${r.c}">
-    <div class="shop-ico" style="filter:none;position:relative;overflow:visible">${rarFrame(it.rar)}${eqIcon(it.slot)}</div>
+    <div class="shop-ico" style="filter:none;position:relative;overflow:visible">${rarFrame(it.rar)}${itemIcon(it)}</div>
     <div class="shop-info">
       <div class="shop-name" style="color:${r.c}">${it.name}
         <small style="color:${r.c}">${r.name} · ${EQ_SLOTS[it.slot].name} · Lv.${it.ilvl||1}</small>
