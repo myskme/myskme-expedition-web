@@ -21,12 +21,13 @@
   --mono:ui-monospace,Menlo,Consolas,monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}/* overscroll:none 防安卓滚动链/下拉刷新连带收放地址栏 */
 body{background:#0c0d16;font-family:var(--serif);color:var(--ink);user-select:none;-webkit-user-select:none}
-canvas{display:block;image-rendering:auto}
+canvas{display:block;image-rendering:auto;touch-action:none}/* touch-action:none 关键——安卓上拖摇杆/点击移动时禁掉浏览器默认滚动手势(passive监听拦不住),根治"移动带动页面上下抖+地址栏收放";iOS本就靠position:fixed克制,故你看不到 */
 /* HD 图标统一锐化：源图(96/128px)恒大于显示尺寸=永远缩小，crisp-edges 锐而不糊不块；覆盖 HUD 技能/背包/茶/闪避图标 + mbi 菜单图标(.crisp)，竖横屏同效 */
 .sk img,#dashbox img,.mbtn img,#dashbtn img,img.crisp{image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges}
-#game{position:fixed;inset:0}
+#game{position:fixed;inset:0;touch-action:none}
+.mbtn,#dashbtn,#joy,#goBtn,#mysmapBtn,#hint,#hud{touch-action:none}/* 控件同禁默认手势(这些永不需要滚动;弹层.overlay/.ov-inner不动,保留菜单滚动) */
 /* 扫描线 + 暗角 */
 #crt{position:fixed;inset:0;pointer-events:none;z-index:5;
   background:repeating-linear-gradient(0deg,rgba(0,0,0,.13) 0 1px,transparent 1px 3px)}
@@ -244,6 +245,7 @@ body.intd #hud,body.intd .mbtn,body.intd #dashbtn,body.intd #joy{display:none!im
 #tdbar .tdhero.on{border-color:var(--gold);color:var(--gold);box-shadow:0 0 8px rgba(255,205,117,.4)}
 #tdbar .tdhero i{font-style:normal;font-size:10px;color:var(--gold);margin-top:1px}
 #tdbar .tdrow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+#tdbar .tdstat,#tdbar .tdsyn,#tdbar .tditems,#tdbar .tdheroes,#tdbar .tdrow{touch-action:none}/* 布阵塔防底栏各行禁默认手势——TD模式隐藏#hud/#joy,底栏#tdbar是canvas兄弟(画布touch-action盖不到);故意不加在#tdbar本体,否则其可滚后代#tdboard(今日榜overflow:auto)按touch-action交集规则会滚不动 */
 #tdbar .tdwave{align-self:center;color:#ff8f6b;font:13px var(--serif)}
 #ovDex .cdex-h{text-align:left;color:var(--gold);font-size:12.5px;margin:14px 0 6px;border-left:3px solid var(--gold);padding-left:7px}
 #ovDex .cdex-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -540,7 +542,7 @@ body.intd #hud,body.intd .mbtn,body.intd #dashbtn,body.intd #joy{display:none!im
 <div id="tdbar"></div>
 <script>
 "use strict";
-const BUILD='20260712a';  // 构建版本号（遥测用，每次发布手动+一位）；20260712a=后端迁 Cloudflare Worker
+const BUILD='20260713a';  // 构建版本号（遥测用，每次发布手动+一位）；20260713a=安卓移动优化(固定步长累加器治低帧率半速卡顿+touch-action治拖拽抖动地址栏)
 /* ============ 数据 · 可操作角色（依据角色总录整理版） ============ */
 const CHARS={
   lin:{name:'琳',emoji:'🐈',rar:'SSR',role:'护剑人 · 剑弧',hp:110,atk:10,spd:2.6,wpn:'sword',
@@ -4349,15 +4351,28 @@ function updateHud(){
   $('#crynum').textContent=MODE==='run'&&RUN?''+RUN.crystals:''+META.crystals;
 }
 var _prevDrawMode='',_idleF=0;
+/* 固定步长模拟：位移/冷却/子弹/计时全按帧计数写的(隐含假设60fps)。低帧率安卓(掉到30fps)会全局半速+抖=玩家反馈的"移动卡"；高刷屏(120Hz)则会超速。
+   这里用累加器让 update() 恒定按 60Hz 步进、与渲染帧率解耦：60fps机每帧≈1步、30fps机每帧≈2步、120Hz每2帧1步——游戏速度稳定，无需把全量 x+=vx 改成 x+=vx*dt。 */
+var _simAcc=0,_simLast=0;var SIM_STEP=1000/60;
 function loop(t){
   {var _edpr=Math.min(devicePixelRatio||1,(typeof META!=='undefined'&&META&&META.lowFx)?2:3);if(innerWidth!==W||innerHeight!==H||_edpr!==DPR)resize();} // 自愈：视口/DPR失同步即重建画布(修偶发"放大"地图bug——iOS旋转/工具栏取到陈旧尺寸时画布与视口错配)
-  if(MODE==='town'||MODE==='run'||MODE==='td')update();
-  else if(_lowhpEl&&_lowhpEl._o){_lowhpEl._o=0;_lowhpEl.style.opacity=0;} // 非战斗时清掉低血暗角
+  var _sim=(MODE==='town'||MODE==='run'||MODE==='td');
+  if(_sim){
+    if(!_simLast)_simLast=t;
+    var _el=t-_simLast;_simLast=t;
+    if(_el>250)_el=250;                                  // 切后台/长卡顿回来：钳住每帧时长，防一次补太多步(死亡螺旋)
+    _simAcc+=_el;var _n=0;
+    while(_simAcc>=SIM_STEP&&_n<6){update();_simAcc-=SIM_STEP;_n++;} // 每帧最多补6步，欠太多就丢，绝不越跑越卡
+    if(_n>=6)_simAcc=0;
+  }else{
+    _simLast=0;_simAcc=0;                                 // 离开模拟模式(菜单/弹层)复位，回来不补历史欠帧
+    if(_lowhpEl&&_lowhpEl._o){_lowhpEl._o=0;_lowhpEl.style.opacity=0;} // 非战斗时清掉低血暗角
+  }
   if(!_goBtnEl)_goBtnEl=$('#goBtn');
   if(_goBtnEl){var _gs=(MODE==='town');if(_goBtnEl._s!==_gs){_goBtnEl._s=_gs;_goBtnEl.style.display=_gs?'inline-flex':'none';document.body.classList.toggle('intown',_gs);}}
   if(MODE!=='town'&&_hintHTML!=='')hideHint(); // 非谷地一律收起交互提示气泡(防泄漏到 run/td/merge/无名谷 战斗页)
   // 省电：仅 town/run/td 逐帧重绘(update在跑,画面在变)；其余菜单/弹层模式画面本就静止(update被跳过),降到~7fps重绘即可,不假死不发热
-  if(MODE==='town'||MODE==='run'||MODE==='td'||MODE!==_prevDrawMode||(_idleF++&7)===0)draw();
+  if(_sim||MODE!==_prevDrawMode||(_idleF++&7)===0)draw();
   _prevDrawMode=MODE;
   requestAnimationFrame(loop);
 }
