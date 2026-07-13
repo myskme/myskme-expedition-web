@@ -542,7 +542,7 @@ body.intd #hud,body.intd .mbtn,body.intd #dashbtn,body.intd #joy{display:none!im
 <div id="tdbar"></div>
 <script>
 "use strict";
-const BUILD='20260713a';  // 构建版本号（遥测用，每次发布手动+一位）；20260713a=安卓移动优化(固定步长累加器治低帧率半速卡顿+touch-action治拖拽抖动地址栏)
+const BUILD='20260713b';  // 构建版本号（遥测用，每次发布手动+一位）；20260713b=清晰度与省电开关解耦(DPR恒满分辨率不再受lowFx影响,根治高分屏发虚)；20260713a=安卓移动优化(固定步长累加器+touch-action)
 /* ============ 数据 · 可操作角色（依据角色总录整理版） ============ */
 const CHARS={
   lin:{name:'琳',emoji:'🐈',rar:'SSR',role:'护剑人 · 剑弧',hp:110,atk:10,spd:2.6,wpn:'sword',
@@ -1908,7 +1908,7 @@ function victorySting(){
 /* ============ 引擎核心 ============ */
 const cv=document.getElementById('game'),ctx=cv.getContext('2d');
 let W=0,H=0,DPR=1;
-function resize(){DPR=Math.min(devicePixelRatio||1,(typeof META!=='undefined'&&META&&META.lowFx)?2:3);W=innerWidth;H=innerHeight;
+function resize(){DPR=Math.min(devicePixelRatio||1,3);W=innerWidth;H=innerHeight;
   cv.width=W*DPR;cv.height=H*DPR;cv.style.width=W+'px';cv.style.height=H+'px';
   ctx.setTransform(DPR,0,0,DPR,0,0);}
 addEventListener('resize',resize);addEventListener('orientationchange',function(){resize();setTimeout(resize,250);setTimeout(resize,500);});try{if(window.visualViewport)visualViewport.addEventListener('resize',resize);}catch(e){}resize();
@@ -4355,7 +4355,7 @@ var _prevDrawMode='',_idleF=0;
    这里用累加器让 update() 恒定按 60Hz 步进、与渲染帧率解耦：60fps机每帧≈1步、30fps机每帧≈2步、120Hz每2帧1步——游戏速度稳定，无需把全量 x+=vx 改成 x+=vx*dt。 */
 var _simAcc=0,_simLast=0;var SIM_STEP=1000/60;
 function loop(t){
-  {var _edpr=Math.min(devicePixelRatio||1,(typeof META!=='undefined'&&META&&META.lowFx)?2:3);if(innerWidth!==W||innerHeight!==H||_edpr!==DPR)resize();} // 自愈：视口/DPR失同步即重建画布(修偶发"放大"地图bug——iOS旋转/工具栏取到陈旧尺寸时画布与视口错配)
+  {var _edpr=Math.min(devicePixelRatio||1,3);if(innerWidth!==W||innerHeight!==H||_edpr!==DPR)resize();} // 自愈：视口/DPR失同步即重建画布(修偶发"放大"地图bug——iOS旋转/工具栏取到陈旧尺寸时画布与视口错配)
   var _sim=(MODE==='town'||MODE==='run'||MODE==='td');
   if(_sim){
     if(!_simLast)_simLast=t;
@@ -4808,7 +4808,7 @@ function showSettings(){
       <button class="pbtn alt" onclick="musicMuted=!musicMuted;if(bgmGain)bgmGain.gain.value=musicMuted?0:bgmVol()*.32;if(_recAudio)_recAudio.volume=recBgmVol();showSettings()">${musicMuted?'✦ 音乐 关':'✦ 音乐 开'}</button>
       <button class="pbtn alt" onclick="var ks=Object.keys(BGM_STYLE);META.bgmStyle=ks[(ks.indexOf(META.bgmStyle||'orig')+1)%ks.length];saveMeta();if(bgmKind&&!musicMuted)startBgm(bgmKind);showSettings()">曲风 · ${BGM_STYLE[META.bgmStyle||'orig'].name}</button>
       <button class="pbtn alt" onclick="sfxMuted=!sfxMuted;if(!sfxMuted)sfx('gold');showSettings()">${sfxMuted?'✦ 音效 关':'✦ 音效 开'}</button>
-      <button class="pbtn alt" onclick="META.lowFx=!META.lowFx;saveMeta();showSettings()">${META.lowFx?'✦ 特效 弱':'✦ 特效 强'}</button>
+      <button class="pbtn alt" onclick="META.lowFx=!META.lowFx;saveMeta();showSettings()">${META.lowFx?'✦ 打击特效 · 省电':'✦ 打击特效 · 强'}</button>
     </div>
     <div class="menu-sec">操 作</div>
     <div class="menu-grid">
