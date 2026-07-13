@@ -542,7 +542,7 @@ body.intd #hud,body.intd .mbtn,body.intd #dashbtn,body.intd #joy{display:none!im
 <div id="tdbar"></div>
 <script>
 "use strict";
-const BUILD='20260713b';  // 构建版本号（遥测用，每次发布手动+一位）；20260713b=清晰度与省电开关解耦(DPR恒满分辨率不再受lowFx影响,根治高分屏发虚)；20260713a=安卓移动优化(固定步长累加器+touch-action)
+const BUILD='20260713c';  // 20260713c=慧/音头目正典立绘补全；20260713b=清晰度与省电解耦；20260713a=安卓固定步长+touch-action
 /* ============ 数据 · 可操作角色（依据角色总录整理版） ============ */
 const CHARS={
   lin:{name:'琳',emoji:'🐈',rar:'SSR',role:'护剑人 · 剑弧',hp:110,atk:10,spd:2.6,wpn:'sword',
@@ -2846,10 +2846,15 @@ function spawnBoss(fid){spawnFoe(fid,mapW/2,150);
   bossBanner(foes[foes.length-1],FOES[fid].line,'#ef4d4d');}
 let _bossCardT=null;
 const BOSS_CARD_IDS=['hui','yin','hang','xuan','parrot','ye'];
-/* —— 章节美术接线（Codex 2026-07-12 交付 · 一律「有新图则用、缺则回退旧占位」）—— */
+/* —— 章节美术接线（Codex 2026-07-12/13 交付 · 一律「有新图则用、缺则回退旧占位」）—— */
 const CHAP_DIR='assets/hub/expedition-chapter-art-20260712/web/';
-const BOSS_ART_IDS=['ye','xuan','parrot','hang']; // 这四个有 Codex 新透明立绘
-function bossArtURL(fid){return BOSS_ART_IDS.indexOf(fid)>=0?CHAP_DIR+'boss-'+fid+'.webp':'';}
+const BOSS_EXTRA_DIR='assets/hub/expedition-boss-art-20260713/web/';
+const BOSS_ART={
+  ye:CHAP_DIR+'boss-ye.webp',xuan:CHAP_DIR+'boss-xuan.webp',
+  parrot:CHAP_DIR+'boss-parrot.webp',hang:CHAP_DIR+'boss-hang.webp',
+  hui:BOSS_EXTRA_DIR+'boss-hui.webp',yin:BOSS_EXTRA_DIR+'boss-yin.webp'
+};
+function bossArtURL(fid){return BOSS_ART[fid]||'';}
 // 章节选择场景（关卡索引→场景图 basename；i=3 无尽无场景）。缺图=只剩暗底渐变，天然回退。
 const STAGE_ART={0:'stage-0-snakeforest',1:'stage-1-greytower',2:'stage-2-cagedblade',4:'stage-4-namelessvale'};
 function stageBg(i){return STAGE_ART[i]?`background-image:linear-gradient(rgba(9,9,13,.58),rgba(9,9,13,.80)),url('${CHAP_DIR}${STAGE_ART[i]}-640.webp');background-size:cover;background-position:center;`:'';}

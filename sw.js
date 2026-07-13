@@ -1,6 +1,6 @@
 /* MYSKME 远征录 · Service Worker
    策略：页面走网络优先（保证更新即时生效），立绘等静态资源走缓存优先（离线可玩） */
-const CACHE = 'myskme-v11';
+const CACHE = 'myskme-v12';
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./'])));
   self.skipWaiting();
