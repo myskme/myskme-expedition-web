@@ -31,3 +31,12 @@
 - 改动文件：仅 `index.html` 的 `CHAR_META.jin.lore`、`BUILD=20260713d` 与本协作记录；改为“赤狐少女、橙红长发与白色发梢”及女性代词，玩法、数值、存档、美术路径全部不动。
 - 跨项目一致性：自鸣棋本轮新角色立绘同步以赤狐少女为正式版；误生的少年版仅本地归档、从未上线。
 - 自测：内联 JavaScript 语法通过；文本检索已无“赤狐少年”。Claude 后续不得用旧编年史片段覆盖本条用户确认的最高正典。
+
+### 2026-07-16 · Claude · 榜单顺畅三件套（玩家反馈"榜没了"根治）
+
+- 基线：`17ba3f0` → 发布 `1aa4056`，`BUILD=20260716a`。改动仅 `index.html` 排行榜客户端区（约 5200-5300 行）与 `endRunCommon`；美术/正典/玩法数值零触碰。
+- 背景：玩家报"之前的榜没有了"。排查结论=数据零丢失——①月度赛季 7/4 惰性翻篇，六月榜完整归档在 `?season=2026-06`；②0712 Netlify→GitHub Pages 跨 origin 迁移，老玩家 localStorage（昵称/lbId）搁浅旧域，无昵称则 lbSubmit 永不提交。王老师定调：内测老玩家不救，保证现在和以后顺畅。
+- 前端四改：①`lbOpen` 赛季翻篇醒目公告（`META.lbSeasonSeen` 跨赛季检测，META 新增字段、旧档 undefined 安全）；②`lbHistory(sel)` 历史赛季 24 期全可翻（chips 切换，原来只能看最近一季）；③`endRunCommon` 结算顺手 `lbSubmit()`（有昵称才发、9 秒自限频，不再只靠玩家开榜才提交）；④提交返回 `stale`（设备时钟差>90s）时在 `#lbSubMsg` 给可见提示（原空 catch 静默）。
+- 后端同日（myskme-game-api `e345f8e`）：赛季翻篇改「归档写成功才清榜」；CORS 未知 origin 回落值换 `myskme.github.io`；kvput 覆写 `leaderboard/boards` 须 `force:true`。run_diff 91/91 + itest 14/14（新增 T12-T15）。
+- 自测：单 script 块 node --check 通过；localhost stub 验证公告/chips/stale 提示/榜面渲染 5/5；线上真实域名验证 BUILD/公告/七月榜/六月归档回顾 8/8。
+- 交接（给 Codex）：请保留 `META.lbSeasonSeen` 字段、`#lbSubMsg` 容器、`lbHistory(sel)` 参数签名与 `endRunCommon` 里的 `lbSubmit()` 行；排行榜视觉若要美化随意，这四个逻辑挂点别断。源文件 `new code/MYSKME-热血远征.html` 已回灌至 20260716a（源=Pages）。
