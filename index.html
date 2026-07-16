@@ -542,7 +542,7 @@ body.intd #hud,body.intd .mbtn,body.intd #dashbtn,body.intd #joy{display:none!im
 <div id="tdbar"></div>
 <script>
 "use strict";
-const BUILD='20260713d';  // 20260713d=瑾正典性别纠错；20260713c=慧/音头目立绘；20260713b=清晰度与省电解耦；20260713a=安卓固定步长
+const BUILD='20260716a';  // 20260716a=榜单顺畅三件套(赛季翻篇公告/历史赛季多期/结算顺手上榜/时钟不准可见提示)；20260713d=瑾正典性别纠错；20260713c=慧/音头目立绘
 /* ============ 数据 · 可操作角色（依据角色总录整理版） ============ */
 const CHARS={
   lin:{name:'琳',emoji:'🐈',rar:'SSR',role:'护剑人 · 剑弧',hp:110,atk:10,spd:2.6,wpn:'sword',
@@ -3399,6 +3399,7 @@ function endRunCommon(){
   META.crystals+=RUN.crystals;
   saveMeta();checkUnlocks();
   try{profilePushSoon();}catch(e){}
+  try{lbSubmit();}catch(e){} // 结算顺手上榜(有昵称才真正发送,9秒自限频)——不再只靠玩家主动开榜,榜面不滞后
 }
 function runVictory(){
   if(MODE!=='run')return;
@@ -5212,6 +5213,8 @@ async function lbSubmit(){
     const r=await fetch(LB_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,name,power,depth,score,merge,ts,nonce,sig})});
     const d=await r.json();
     if(d&&d.boards){_lbCache=d.boards;_lbCacheT=Date.now();if($('#ovLbBody'))lbRenderBody(d.boards,d.ranks);}
+    // 设备时钟不准(与服务器差>90秒)是唯一会"稳定静默失败"的提交路径——榜单开着时给玩家一句可见提示
+    if(d&&d.error==='stale'){const m=$('#lbSubMsg');if(m){m.textContent='⚠ 这台设备的时间不准，成绩暂时传不上榜——到系统设置打开「自动设定时间」后再开一次榜单即可';m.style.color='#ffcd75';}}
     profilePush();
   }catch(e){}                                      // 离线/函数挂了也绝不影响游戏
 }
@@ -5236,7 +5239,13 @@ async function lbOpen(){
   if(!boards){try{const r=await fetch(LB_API);const d=await r.json();if(d&&d.boards){boards=d.boards;_lbCache=boards;_lbCacheT=Date.now();if(d.season)_lbSeason=d.season;}}catch(e){}}
   if(tok!==_lbView)return;                           // await 期间用户已离开排行榜 → 放弃绘制
   if(!boards){ov.innerHTML=lbShell('<div class="pix-sub" style="margin:34px 0;color:#ef8d8d">排行榜暂时连不上，稍后再试</div>'+lbNameLine());return;}
-  ov.innerHTML=lbShell('<div id="ovLbBody"></div>'+lbNameLine());
+  // 赛季翻篇公告:上次看榜还是旧赛季 → 醒目说明"榜没消失,整月成绩在回顾里"(治玩家"榜没了"误会)
+  let notice='';
+  if(_lbSeason&&META.lbSeasonSeen&&META.lbSeasonSeen!==_lbSeason){
+    notice='<div class="pix-sub" style="border:1px solid rgba(255,205,117,.45);background:rgba(255,205,117,.08);border-radius:8px;padding:9px 12px;margin:0 0 12px;font-size:11.5px;line-height:1.7;text-align:left">✦ <b style="color:var(--gold)">新赛季已开启！</b>上月全部成绩已完整归档，点上方<b style="color:var(--gold)">「上赛季回顾」</b>随时可看。你的历史最佳会自动带入本赛季——打一局或开一次榜就重新上榜了。</div>';
+  }
+  if(_lbSeason&&META.lbSeasonSeen!==_lbSeason){META.lbSeasonSeen=_lbSeason;saveMeta();}
+  ov.innerHTML=lbShell(notice+'<div id="lbSubMsg" class="pix-sub" style="font-size:11px"></div><div id="ovLbBody"></div>'+lbNameLine());
   lbRenderBody(boards,null);
   lbSubmit();  // 顺手提交（有昵称才真正发送）
 }
@@ -5270,16 +5279,17 @@ async function lbLoadDoodles(){
     else if(s.innerHTML){s._d='';s.innerHTML='';}}
 }
 
-async function lbHistory(){
+async function lbHistory(sel){
   const body=$('#ovLbBody'); if(body)body.innerHTML='<div class="pix-sub" style="margin:30px 0">读取历史赛季……</div>';
   try{
     const d=await (await fetch(LB_API+'?seasons')).json();
-    const list=(d&&d.seasons)||[];
+    const list=((d&&d.seasons)||[]).map(s=>String(s).replace(/[^0-9\-]/g,'')).filter(Boolean);
     if(!list.length){if(body)body.innerHTML='<div class="pix-sub" style="margin:30px 0">还没有往期赛季——本月是第一季，冲榜吧！</div>';return;}
-    const id=list[0];
+    const id=(sel&&list.includes(sel))?sel:list[0]; // 后端留 24 期,全部可翻(原先只能看最近一季)
     const d2=await (await fetch(LB_API+'?season='+encodeURIComponent(id))).json();
     if(!d2||!d2.snapshot||!d2.snapshot.boards){if(body)body.innerHTML='<div class="pix-sub" style="margin:30px 0">该赛季暂无数据</div>';return;}
-    if(body)body.innerHTML='<div class="pix-sub" style="color:var(--gold);font-size:12px;margin-bottom:10px">「'+_lbSeasonLabel(id)+'」回顾 · <span style="cursor:pointer;text-decoration:underline" onclick="lbOpen()">↩ 返回本赛季</span></div>'+lbBoardsHTML(d2.snapshot.boards,null,META.lbId);
+    const chips=list.length>1?('<div style="margin:2px 0 12px">'+list.map(s=>'<span class="pix-sub" style="display:inline-block;cursor:pointer;padding:3px 9px;margin:0 6px 6px 0;border-radius:6px;font-size:11px;border:1px solid '+(s===id?'var(--gold)':'rgba(255,255,255,.22)')+';'+(s===id?'color:var(--gold)':'')+'" onclick="lbHistory(\''+s+'\')">'+_lbSeasonLabel(s)+'</span>').join('')+'</div>'):'';
+    if(body)body.innerHTML='<div class="pix-sub" style="color:var(--gold);font-size:12px;margin-bottom:10px">「'+_lbSeasonLabel(id)+'」回顾 · <span style="cursor:pointer;text-decoration:underline" onclick="lbOpen()">↩ 返回本赛季</span></div>'+chips+lbBoardsHTML(d2.snapshot.boards,null,META.lbId);
   }catch(e){if(body)body.innerHTML='<div class="pix-sub" style="margin:30px 0;color:#ef8d8d">历史赛季读取失败，稍后再试</div>';}
 }
 function lbAskName(){
