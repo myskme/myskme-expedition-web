@@ -104,7 +104,10 @@ const star = await page.evaluate(() => {
   if (typeof goStarling !== 'function') return { missing: true };
   let navigated = null;
   const origin = location.href;
-  MODE = 'run'; _starlingArmed = 0;
+  const modeWas = MODE;
+  MODE = 'run'; _starlingArmed = 0;   // ⚠ 仅为触发局内守卫；用完必须还原：
+                                      // 主循环 MODE==='run' 分支假定 P 已存在（真实流程 startRun 同时置 MODE 与 P），
+                                      // 测试里强留 MODE='run' 而 P===null 会让 rAF 抛 P.dashing（假报错）
   // 拦截跳转：改写 location.href 会真跳，这里只看它有没有走到赋值那步
   const spy = { get href() { return origin; }, set href(v) { navigated = v; } };
   Object.defineProperty(window, '__navSpy', { value: spy, configurable: true });
@@ -112,6 +115,7 @@ const star = await page.evaluate(() => {
   const guarded = /MODE==='run'/.test(src) && /再点一次|确定/.test(src);
   goStarling();                       // 第一次：应只提示
   const firstNavigated = navigated;
+  MODE = modeWas;
   return { guarded, firstNavigated };
 });
 if (star.missing) check('goStarling 存在', false);
@@ -123,6 +127,59 @@ const honest = await page.evaluate(() => {
   return { hasEmptyCatch: /catch\(e\)\{\}\s*$/m.test(src), mentionsNetwork: /网络/.test(src) };
 });
 check('lbSubmit 断网时会给可见提示（不再是空 catch）', honest.mentionsNetwork === true, JSON.stringify(honest));
+
+// ---------- 5. 角色图鉴：33 全员 + 典藏版全注册 ----------
+const dexFiles = fs.readdirSync(path.join(ROOT, 'assets/cards'));
+const baseIds = dexFiles.filter(f => /-full\.jpg$/.test(f) && !/_sp-full\.jpg$/.test(f)).map(f => f.replace('-full.jpg', '')).sort();
+const spIds = dexFiles.filter(f => /_sp-full\.jpg$/.test(f)).map(f => f.replace('_sp-full.jpg', '')).sort();
+
+const dex = await page.evaluate(() => {
+  const ids = [];
+  CARD_GROUPS.forEach(g => g.ids.forEach(id => ids.push(id)));
+  showCardDex();
+  const html = document.getElementById('ovDex').innerHTML;
+  const detail = {};
+  ids.forEach(id => {
+    cardDexView(id);
+    detail[id] = !!document.getElementById('cdexspbtn');
+  });
+  showCardDex();
+  return {
+    ids, sp: SP_FORMS.slice(),
+    dup: ids.length !== new Set(ids).size,
+    hasSoonText: /未来登场/.test(html),
+    groups: CARD_GROUPS.map(g => g.g),
+    spBtnById: detail,
+    unlockedAll: ids.filter(id => !cardUnlocked(id)),
+  };
+});
+check('图鉴登记 = 卡库 base 全员，无重复', !dex.dup && dex.ids.slice().sort().join() === baseIds.join(),
+  `dex ${dex.ids.length} / base ${baseIds.length}`);
+check('SP_FORMS 覆盖全部典藏卡文件（有图必可翻面）',
+  spIds.filter(id => dex.sp.indexOf(id) < 0).length === 0,
+  '有图未注册: ' + (spIds.filter(id => dex.sp.indexOf(id) < 0).join(' ') || '无'));
+check('SP_FORMS 无空头注册（注册必有图）',
+  dex.sp.filter(id => spIds.indexOf(id) < 0).length === 0,
+  '注册无图: ' + (dex.sp.filter(id => spIds.indexOf(id) < 0).join(' ') || '无'));
+check('每张已注册典藏卡的详情页都有「典藏版」按钮',
+  dex.sp.every(id => dex.spBtnById[id] === true),
+  '缺按钮: ' + (dex.sp.filter(id => !dex.spBtnById[id]).join(' ') || '无'));
+check('图鉴不再出现失真文案「未来登场」', dex.hasSoonText === false);
+check('分组按正典拆分（群星光明学徒 / 边缘黑域与中立）',
+  dex.groups.some(g => /光明学徒/.test(g)) && dex.groups.some(g => /黑域与中立/.test(g)),
+  dex.groups.join(' / '));
+
+// 典藏图真能取到（抽查 0722 新合成的 10 张）
+const newSp = ['zi', 'zeng', 'duo', 'han', 'yang', 'rong', 'wei', 'xiao', 'xin', 'majun'];
+const spHttp = await page.evaluate(async (ids) => {
+  const out = {};
+  for (const id of ids) {
+    const r = await fetch('assets/cards/' + id + '_sp-full.jpg', { method: 'GET' });
+    out[id] = r.status;
+  }
+  return out;
+}, newSp);
+check('0722 新补 10 张典藏卡全部 HTTP 200', newSp.every(id => spHttp[id] === 200), JSON.stringify(spHttp));
 
 check('页面加载无 JS 报错', errors.length === 0, errors.slice(0, 2).join(' | '));
 
