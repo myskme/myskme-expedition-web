@@ -128,6 +128,48 @@ const honest = await page.evaluate(() => {
 });
 check('lbSubmit 断网时会给可见提示（不再是空 catch）', honest.mentionsNetwork === true, JSON.stringify(honest));
 
+// ---------- 4b. 残血卸下再穿上 +HP 装备不能凭空回血 ----------
+const heal = await page.evaluate(() => {
+  const cid = Object.keys(CHARS)[0];
+  const mk = (hp) => ({ slot: 'weapon', rar: 1, name: 'T' + hp, af: { hp }, leg: null, leg2: null });
+  const big = mk(60);
+  const p = makePlayer(cid);
+  applyItem(p, big, 1); p.hp = p.maxhp;
+  const full = p.maxhp;
+  p.hp = 5;                                   // 残血：缺口 > 卸下后的新上限
+  applyItem(p, big, -1);                      // 卸下
+  const mid = { hp: p.hp, maxhp: p.maxhp };
+  applyItem(p, big, 1);                       // 穿回来
+  const back = { hp: p.hp, maxhp: p.maxhp };
+  // 再来一轮，确认不会越滚越高
+  applyItem(p, big, -1); applyItem(p, big, 1);
+  const twice = { hp: p.hp, maxhp: p.maxhp };
+  return { full, mid, back, twice };
+});
+check('残血(5)卸下+穿回 +60 装备不回血', heal.back.hp === 5 && heal.back.maxhp === heal.full,
+  JSON.stringify(heal));
+check('反复脱穿也不会滚雪球', heal.twice.hp === 5, JSON.stringify(heal.twice));
+
+// ---------- 4c. 走 IZ 的动态文案里没有会被过滤掉的符号 ----------
+const izsafe = await page.evaluate(() => {
+  const bad = [];
+  const probe = (label, s) => { if (typeof s !== 'string') return; const o = IZ(s); if (o !== s) bad.push(label + ': ' + s.slice(0, 40)); };
+  probe('goStarling', goStarling.toString().match(/toast\('([^']*)'\)/)?.[1] || '');
+  showSaveTransfer();
+  const html = document.getElementById('ovSave')?.innerHTML || document.body.innerHTML;
+  return { bad, leadingSpaceBtn: /<button[^>]*>\s+[^<]/.test(html) };
+});
+check('goStarling 的离场警告不含被 IZ 吃掉的符号', izsafe.bad.length === 0, izsafe.bad.join(' | '));
+
+// ---------- 4d. 一键重置要连云端撤销快照一起清 ----------
+const resetClean = await page.evaluate(() => {
+  localStorage.setItem(SAVEKEY + '_pre_cloud', 'STALE');
+  const src = doReset.toString() + finishImport.toString();
+  return { clearsInReset: /_pre_cloud/.test(doReset.toString()), clearsInImport: /_pre_cloud/.test(finishImport.toString()) };
+});
+check('doReset / finishImport 都会清掉 _pre_cloud 快照',
+  resetClean.clearsInReset && resetClean.clearsInImport, JSON.stringify(resetClean));
+
 // ---------- 5. 角色图鉴：33 全员 + 典藏版全注册 ----------
 const dexFiles = fs.readdirSync(path.join(ROOT, 'assets/cards'));
 const baseIds = dexFiles.filter(f => /-full\.jpg$/.test(f) && !/_sp-full\.jpg$/.test(f)).map(f => f.replace('-full.jpg', '')).sort();
@@ -165,6 +207,21 @@ check('每张已注册典藏卡的详情页都有「典藏版」按钮',
   dex.sp.every(id => dex.spBtnById[id] === true),
   '缺按钮: ' + (dex.sp.filter(id => !dex.spBtnById[id]).join(' ') || '无'));
 check('图鉴不再出现失真文案「未来登场」', dex.hasSoonText === false);
+
+// 闪卡 + 典藏版 两个开关不能互相打架
+const foil = await page.evaluate(() => {
+  cardDexView('lin');
+  cardDexFoil('lin');                                   // 开闪卡
+  const afterFoil = { on: document.getElementById('cdexfoilfx').classList.contains('on'), btn: document.getElementById('cdexfoilbtn').textContent };
+  cardDexSP('lin');                                     // 切典藏版
+  const afterSP = { on: document.getElementById('cdexfoilfx').classList.contains('on'), btn: document.getElementById('cdexfoilbtn').textContent };
+  cardDexFoil('lin');                                   // 再点闪卡：应当是"开"
+  const again = { on: document.getElementById('cdexfoilfx').classList.contains('on') };
+  return { afterFoil, afterSP, again };
+});
+check('切到典藏版会同时关掉闪卡特效并复位按钮文案',
+  foil.afterSP.on === false && /闪 卡 版/.test(foil.afterSP.btn), JSON.stringify(foil));
+check('切完典藏版后点闪卡是"开"，不需要点两次', foil.again.on === true, JSON.stringify(foil.again));
 check('分组按正典拆分（群星光明学徒 / 边缘黑域与中立）',
   dex.groups.some(g => /光明学徒/.test(g)) && dex.groups.some(g => /黑域与中立/.test(g)),
   dex.groups.join(' / '));

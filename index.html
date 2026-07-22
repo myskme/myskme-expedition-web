@@ -542,7 +542,7 @@ body.intd #hud,body.intd .mbtn,body.intd #dashbtn,body.intd #joy{display:none!im
 <div id="tdbar"></div>
 <script>
 "use strict";
-const BUILD='20260723a';  // 20260723a=图鉴典藏版补齐(SP_FORMS 23→33全员)+分组按正典拆分(群星光明学徒/边缘黑域与中立)+"未来登场"改"群像"+典藏计数；20260716a=榜单顺畅三件套(赛季翻篇公告/历史赛季多期/结算顺手上榜/时钟不准可见提示)；20260713d=瑾正典性别纠错；20260713c=慧/音头目立绘
+const BUILD='20260723b';  // 20260723b=残血脱穿装备无成本回血根治+图鉴闪卡/典藏版开关打架+塔防三合一静默吞装备+重置残留云撤销快照+IZ吃掉的⚠↩⤴⤵；20260723a=图鉴典藏版补齐(SP_FORMS 23→33全员)+分组按正典拆分(群星光明学徒/边缘黑域与中立)+"未来登场"改"群像"+典藏计数；20260716a=榜单顺畅三件套(赛季翻篇公告/历史赛季多期/结算顺手上榜/时钟不准可见提示)；20260713d=瑾正典性别纠错；20260713c=慧/音头目立绘
 /* ============ 数据 · 可操作角色（依据角色总录整理版） ============ */
 const CHARS={
   lin:{name:'琳',emoji:'🐈',rar:'SSR',role:'护剑人 · 剑弧',hp:110,atk:10,spd:2.6,wpn:'sword',
@@ -867,11 +867,17 @@ function dropEquip(x,y,boost,chance){
 // 卸下 +HP 装备时 clamp 把满血削到新上限，穿上时却不还回来 →
 // 满血换一件同槽装备净掉血，神话三件套整套换一次 -60。
 // 按缺口结算则两个方向对称，换装前后血量守恒（满血仍满血，残血仍差同样多）。
+// ⚠ 缺口大于新上限时会被 hp>=1 的下限截断，缺口信息就丢了 —— 残血 5/100 卸下 +60 装备
+//   会变成 1/40，再穿回来缺口只剩 39，凭空回到 61 血（无成本回血）。截断掉的那部分记进
+//   p._hpDebt，上限回升时先还这笔欠账，来回一趟才真正守恒。
 function setMaxHp(p,delta){
-  const deficit=Math.max(0,p.maxhp-p.hp);
+  const stale=(p.hp>=p.maxhp)?0:(p._hpDebt||0); // 已被治疗回满则旧欠账作废
+  const deficit=Math.max(0,p.maxhp-p.hp)+stale;
   p.maxhp+=delta;
   if(p.maxhp<1)p.maxhp=1;
-  p.hp=Math.max(1,Math.min(p.maxhp,p.maxhp-deficit));
+  const want=p.maxhp-deficit;
+  p.hp=Math.max(1,Math.min(p.maxhp,want));
+  p._hpDebt=Math.max(0,p.hp-want);
 }
 function applyItem(p,it,dir){ // dir=+1 穿上 / -1 卸下（增量可逆，换装不丢本局强化）
   const af=it.af,mul=(v)=>dir>0?(1+v/100):1/(1+v/100);
@@ -1199,7 +1205,9 @@ function showCardDex(){
 }
 /* 典藏 SP = 33/33 全员（0722 卡框合成器补齐 duo/han/majun/rong/wei/xiao/xin/yang/zeng/zi 十张后注册） */
 const SP_FORMS=['zi','zeng','ye','wolf','hang','xuan','hui','lin','nuo','rui','xi','yu','hai','parrot','yin','blackcat','jin','qi','hao','yue','wen','wan','one','jia','lu','duo','han','yang','rong','wei','xiao','xin','majun'];
-function cardDexSP(id){var im=document.getElementById('cdexbig'),b=document.getElementById('cdexspbtn'),fb=document.getElementById('cdexfoilbtn');if(!im)return;var std='assets/cards/'+id+'-full.jpg';var on=im.getAttribute('data-sp')==='1';if(on){im.onerror=null;im.src=std;im.setAttribute('data-sp','0');im.style.boxShadow='0 8px 28px rgba(0,0,0,.55)';if(b)b.textContent='✦ 典 藏 版';}else{im.onerror=function(){im.onerror=null;im.src=std;im.setAttribute('data-sp','0');im.style.boxShadow='0 8px 28px rgba(0,0,0,.55)';if(b)b.textContent='✦ 典 藏 版';};im.src='assets/cards/'+id+'_sp-full.jpg';im.setAttribute('data-sp','1');im.setAttribute('data-foil','0');im.style.boxShadow='0 10px 40px rgba(176,124,232,.55)';if(b)b.textContent='标 准 版';if(fb)fb.textContent='✦ 闪 卡 版';}}
+// ⚠ 闪卡的唯一真状态位是 #cdexfoilfx 的 .on；切换典藏版时必须一并关掉，
+//   否则会出现「特效还开着、按钮却写着未开启」，玩家要点两次才回得去。
+function cardDexSP(id){var im=document.getElementById('cdexbig'),b=document.getElementById('cdexspbtn'),fb=document.getElementById('cdexfoilbtn');if(!im)return;var _fx=document.getElementById('cdexfoilfx');if(_fx)_fx.classList.remove('on');if(fb)fb.textContent='✦ 闪 卡 版';var std='assets/cards/'+id+'-full.jpg';var on=im.getAttribute('data-sp')==='1';if(on){im.onerror=null;im.src=std;im.setAttribute('data-sp','0');im.style.boxShadow='0 8px 28px rgba(0,0,0,.55)';if(b)b.textContent='✦ 典 藏 版';}else{im.onerror=function(){im.onerror=null;im.src=std;im.setAttribute('data-sp','0');im.style.boxShadow='0 8px 28px rgba(0,0,0,.55)';if(b)b.textContent='✦ 典 藏 版';};im.src='assets/cards/'+id+'_sp-full.jpg';im.setAttribute('data-sp','1');im.setAttribute('data-foil','0');im.style.boxShadow='0 10px 40px rgba(176,124,232,.55)';if(b)b.textContent='标 准 版';if(fb)fb.textContent='✦ 闪 卡 版';}}
 function cardDexView(id){
   var ov=document.getElementById('ovDex');if(!ov)return;
   var m=cardMeta(id),col=CARD_RARCOL[m.rar]||'#ff6b9d',c=CHARS[id];
@@ -3923,12 +3931,20 @@ function tdCombine(cid){
     var same=TD.units.filter(function(u){return u.cid===cid&&(u.lv||1)===lv;});
     if(same.length>=3){
       var keep=same[2],rm=[same[0],same[1],same[2]];
-      var _mit=[];rm.forEach(function(srm){(srm.items||[]).forEach(function(iid){if(_mit.length<3)_mit.push(iid);});});
+      // 三只合一最多带走 3 件装备，多出来的照「卖英雄」的口径退回背包/满栏折金，
+      // 不能像以前那样静默蒸发——合成是放下第三只就自动触发的，玩家无从预防。
+      var _mit=[],_back=0,_cash=0;
+      rm.forEach(function(srm){(srm.items||[]).forEach(function(iid){
+        if(_mit.length<3){_mit.push(iid);return;}
+        if((TD.items=TD.items||[]).length<12){TD.items.push(iid);_back++;}
+        else{TD.gold+=8;_cash++;}
+      });});
       TD.units=TD.units.filter(function(u){return rm.indexOf(u)<0;});
       TD.units.push({cid:cid,x:keep.x,y:keep.y,atk:Math.round(keep.atk*1.8),rng:keep.rng+16,maxcd:keep.maxcd,cd:0,fx:0,lv:lv+1,items:_mit,emblem:(same[0].emblem||same[1].emblem||same[2].emblem||null)});
       if(typeof spawnParts==='function')try{spawnParts(keep.x,keep.y,'#ff6cc4',16,4);}catch(e){}
       if(typeof sfx==='function')try{sfx('legend');}catch(e){}
-      toast('\u2605 '+(lv+1)+'\u2605 合成 · '+((CHARS[cid]||{}).name||'')+' 升到 '+(lv+1)+'\u2605！');
+      toast('\u2605 '+(lv+1)+'\u2605 合成 · '+((CHARS[cid]||{}).name||'')+' 升到 '+(lv+1)+'\u2605！'+(_back?' · '+_back+' 件装备退回背包':'')+(_cash?' · '+_cash+' 件满栏折金':''));
+      if(_back||_cash)try{tdRenderBar();}catch(e){}
     }
   }
 }
@@ -4893,6 +4909,9 @@ function _renderResetStep(){var el=$('#resetStep');if(!el)return;
 }
 function doReset(){
   try{localStorage.removeItem(SAVEKEY);}catch(e){}
+  // 「永久清空·不可恢复」就得真清干净：拉取云端留下的撤销快照不清掉的话，
+  // 重置后再开存档面板还会冒出「撤销上次拉取」，一点就把旧档复活。
+  try{localStorage.removeItem(SAVEKEY+'_pre_cloud');}catch(e){}
   try{localStorage.removeItem('myskme_seen');}catch(e){}
   try{toast('已重置 · 正在重新载入…');}catch(e){}
   setTimeout(function(){try{location.reload();}catch(e){}},700);
@@ -4921,7 +4940,7 @@ function goStarling(){
     +'&f='+encodeURIComponent((META.friends||[]).slice(0,20).join(','));
   if(MODE==='run'&&Date.now()-_starlingArmed>6000){
     _starlingArmed=Date.now();
-    toast('⚠ 远征还没结束，离开会丢掉这一局的进度——确定要去就再点一次');
+    toast('★ 远征还没结束，离开会丢掉这一局的进度——确定要去就再点一次'); // 只能用 ✦★（IZ 白名单），⚠ 会被过滤成孤立空格
     return;
   }
   _starlingArmed=0;
@@ -4943,10 +4962,10 @@ function showSaveTransfer(){
     <button class="pbtn alt" style="margin-top:8px;width:100%" onclick="doImportSave()">粘 贴 并 导 入</button>
     <div style="color:var(--gold);font-size:13px;font-weight:700;margin:18px 0 6px">③ 云存档 <small style="color:#ef8d8d;font-weight:400">· 拉取会覆盖本机进度</small></div>
     <div style="display:flex;gap:8px">
-      <button class="pbtn alt" style="flex:1;margin:0" onclick="cloudPushManual()">⤴ 上传到云</button>
-      <button class="pbtn alt" style="flex:1;margin:0" onclick="cloudApplyPending()">⤵ 拉取云端</button>
+      <button class="pbtn alt" style="flex:1;margin:0" onclick="cloudPushManual()">上 传 到 云</button>
+      <button class="pbtn alt" style="flex:1;margin:0" onclick="cloudApplyPending()">拉 取 云 端</button>
     </div>
-    ${localStorage.getItem(SAVEKEY+'_pre_cloud')?`<button class="pbtn alt" style="margin-top:8px;width:100%;font-size:11px" onclick="cloudUndoPull()">↩ 撤销上次「拉取云端」，回到拉取前的进度</button>`:''}
+    ${localStorage.getItem(SAVEKEY+'_pre_cloud')?`<button class="pbtn alt" style="margin-top:8px;width:100%;font-size:11px" onclick="cloudUndoPull()">撤销上次「拉取云端」，回到拉取前的进度</button>`:''}
     <div id="saveMsg" style="margin-top:12px;min-height:20px;font-size:12px;text-align:center;line-height:1.6"></div>
   </div>
   <button class="ov-close" onclick="renderMenu()">✕</button>
@@ -4977,6 +4996,8 @@ function doImportSave(){
   else finishImport(false);
 }
 function finishImport(fresh){
+  // 导入等于换了一份进度，旧的「拉取前快照」已经跟本机无关，留着只会误导撤销
+  try{localStorage.removeItem(SAVEKEY+'_pre_cloud');}catch(e){}
   if(fresh){try{META.lbId=lbNewId();META.lbToken='';saveMeta();}catch(e){}}
   _smsg('✓ 正在重新载入游戏……','#38b764');
   setTimeout(()=>{try{location.reload();}catch(e){}},700);
@@ -5223,7 +5244,7 @@ async function cloudApplyPending(){
       if(box)box.innerHTML=`<div style="text-align:left;line-height:1.9">
         <div style="color:#9aa3b8">云端：${row(c)}</div>
         <div style="color:#9aa3b8">本机：${row(META)}</div>
-        <div style="color:#ffcd75;margin-top:6px">⚠ 拉取会用云端<b>覆盖</b>本机进度。看清上面两行，确认要覆盖再点一次「⤵ 拉取云端」。</div></div>`;
+        <div style="color:#ffcd75;margin-top:6px">⚠ 拉取会用云端<b>覆盖</b>本机进度。看清上面两行，确认要覆盖再点一次「拉取云端」。</div></div>`;
       return;
     }
     try{const cur=localStorage.getItem(SAVEKEY);if(cur)localStorage.setItem(SAVEKEY+'_pre_cloud',cur);}catch(e){}
