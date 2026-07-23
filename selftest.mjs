@@ -238,6 +238,26 @@ const spHttp = await page.evaluate(async (ids) => {
 }, newSp);
 check('0722 新补 10 张典藏卡全部 HTTP 200', newSp.every(id => spHttp[id] === 200), JSON.stringify(spHttp));
 
+// ---------- 6. 选关底图接正典地点场景库① ----------
+const stage = await page.evaluate(() => {
+  const out = {};
+  [0, 1, 2, 3, 4].forEach(i => { out[i] = (typeof stageBg === 'function') ? stageBg(i) : ''; });
+  return { bg: out, dir: (typeof SCENE_DIR !== 'undefined') ? SCENE_DIR : null };
+});
+check('无尽(3)裂隙之底现在有底图(原本没有)', /deepwell-640\.webp/.test(stage.bg[3]), stage.bg[3].slice(0, 80));
+check('一/二/最终话底图指向正典地点场景库①',
+  /snakewood-640/.test(stage.bg[0]) && /graytower-640/.test(stage.bg[1]) && /cage-640/.test(stage.bg[2]),
+  JSON.stringify({ 0: /snakewood/.test(stage.bg[0]), 1: /graytower/.test(stage.bg[1]), 2: /cage/.test(stage.bg[2]) }));
+check('无名谷(4)保留旧图不动', /stage-4-namelessvale/.test(stage.bg[4]));
+// 四张场景底图真能取到
+const stageHttp = await page.evaluate(async () => {
+  const names = ['snakewood', 'graytower', 'cage', 'deepwell'];
+  const out = {};
+  for (const n of names) { const r = await fetch('assets/scenes/' + n + '-640.webp'); out[n] = r.status; }
+  return out;
+});
+check('四张选关场景底图全部 HTTP 200', ['snakewood', 'graytower', 'cage', 'deepwell'].every(n => stageHttp[n] === 200), JSON.stringify(stageHttp));
+
 check('页面加载无 JS 报错', errors.length === 0, errors.slice(0, 2).join(' | '));
 
 await browser.close();

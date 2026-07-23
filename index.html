@@ -362,6 +362,7 @@ body.intd #hud,body.intd .mbtn,body.intd #dashbtn,body.intd #joy{display:none!im
 .tbtn:disabled{opacity:.38;pointer-events:none}
 .tbtn.has-scene{color:#f4e4b8;background-color:#101018;border-bottom-color:#c9a64a;text-shadow:0 1px 4px rgba(0,0,0,.92);min-height:54px;background-repeat:no-repeat}
 .tbtn.has-scene.final{color:#ffdada;border-bottom-color:#d05656}
+.tbtn.has-scene.endless{color:#e9d5ff;border-bottom-color:#8a5cc0;background-color:#140d20} /* 无尽·裂隙之底(深井底图):保留紫色身份的描边与字色 */
 .tbtn.has-scene:hover{filter:brightness(1.14)}
 .foot-tiers{align-items:center}
 .foot-cap{font-family:var(--mono);font-size:9px;letter-spacing:.28em;color:var(--gold-deep,#8a6a2a);
@@ -542,7 +543,7 @@ body.intd #hud,body.intd .mbtn,body.intd #dashbtn,body.intd #joy{display:none!im
 <div id="tdbar"></div>
 <script>
 "use strict";
-const BUILD='20260723b';  // 20260723b=残血脱穿装备无成本回血根治+图鉴闪卡/典藏版开关打架+塔防三合一静默吞装备+重置残留云撤销快照+IZ吃掉的⚠↩⤴⤵；20260723a=图鉴典藏版补齐(SP_FORMS 23→33全员)+分组按正典拆分(群星光明学徒/边缘黑域与中立)+"未来登场"改"群像"+典藏计数；20260716a=榜单顺畅三件套(赛季翻篇公告/历史赛季多期/结算顺手上榜/时钟不准可见提示)；20260713d=瑾正典性别纠错；20260713c=慧/音头目立绘
+const BUILD='20260723c';  // 20260723c=选关底图换正典地点场景库①(紫蛇/灰塔/笼去霓虹剑)+无尽补深井底图；20260723b=残血脱穿装备无成本回血根治+图鉴闪卡/典藏版开关打架+塔防三合一静默吞装备+重置残留云撤销快照+IZ吃掉的⚠↩⤴⤵；20260723a=图鉴典藏版补齐(SP_FORMS 23→33全员)+分组按正典拆分(群星光明学徒/边缘黑域与中立)+"未来登场"改"群像"+典藏计数；20260716a=榜单顺畅三件套(赛季翻篇公告/历史赛季多期/结算顺手上榜/时钟不准可见提示)；20260713d=瑾正典性别纠错；20260713c=慧/音头目立绘
 /* ============ 数据 · 可操作角色（依据角色总录整理版） ============ */
 const CHARS={
   lin:{name:'琳',emoji:'🐈',rar:'SSR',role:'护剑人 · 剑弧',hp:110,atk:10,spd:2.6,wpn:'sword',
@@ -2880,8 +2881,12 @@ const BOSS_ART={
 };
 function bossArtURL(fid){return BOSS_ART[fid]||'';}
 // 章节选择场景（关卡索引→场景图 basename；i=3 无尽无场景）。缺图=只剩暗底渐变，天然回退。
-const STAGE_ART={0:'stage-0-snakeforest',1:'stage-1-greytower',2:'stage-2-cagedblade',4:'stage-4-namelessvale'};
-function stageBg(i){return STAGE_ART[i]?`background-image:linear-gradient(rgba(9,9,13,.58),rgba(9,9,13,.80)),url('${CHAP_DIR}${STAGE_ART[i]}-640.webp');background-size:cover;background-position:center;`:'';}
+const SCENE_DIR='assets/scenes/'; // 0723 正典地点场景库①(Codex 场景包①)
+// 0723 升级:一/二/最终话选关底图换用正典地点母版——紫蛇森林/灰塔换更贴正典的版本,
+//   笼中剑去掉旧图那把紫色霓虹剑(合 0722 品味军规);无尽「裂隙之底」补深井底图(原本没底图)。
+//   无名谷(4)暂无正典场景,保留 0712 旧图。缺图时 has-scene 的深底色兜底,不白。
+const STAGE_ART={0:SCENE_DIR+'snakewood-640.webp',1:SCENE_DIR+'graytower-640.webp',2:SCENE_DIR+'cage-640.webp',3:SCENE_DIR+'deepwell-640.webp',4:CHAP_DIR+'stage-4-namelessvale-640.webp'};
+function stageBg(i){return STAGE_ART[i]?`background-image:linear-gradient(rgba(9,9,13,.58),rgba(9,9,13,.80)),url('${STAGE_ART[i]}');background-size:cover;background-position:center;`:'';}
 // 编年史章节海报（lore section key → 海报 basename）。缺图=onerror 隐藏，不影响文字。
 const CHAP_POSTER={prologue:'chapter-prologue',mysteries:'chapter-mask',bonds:'chapter-sacrifice',prophecy:'chapter-midsummer'};
 // 主线头目专属遗物 → Codex 遗物图标（按 UNIQUES 键匹配）。缺图=回退通用槽位图标。
