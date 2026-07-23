@@ -543,7 +543,7 @@ body.intd #hud,body.intd .mbtn,body.intd #dashbtn,body.intd #joy{display:none!im
 <div id="tdbar"></div>
 <script>
 "use strict";
-const BUILD='20260723c';  // 20260723c=选关底图换正典地点场景库①(紫蛇/灰塔/笼去霓虹剑)+无尽补深井底图；20260723b=残血脱穿装备无成本回血根治+图鉴闪卡/典藏版开关打架+塔防三合一静默吞装备+重置残留云撤销快照+IZ吃掉的⚠↩⤴⤵；20260723a=图鉴典藏版补齐(SP_FORMS 23→33全员)+分组按正典拆分(群星光明学徒/边缘黑域与中立)+"未来登场"改"群像"+典藏计数；20260716a=榜单顺畅三件套(赛季翻篇公告/历史赛季多期/结算顺手上榜/时钟不准可见提示)；20260713d=瑾正典性别纠错；20260713c=慧/音头目立绘
+const BUILD='20260723d';  // 20260723d=无名谷选关底图换正典「无名之原」母版(替0712青绿占位·场景包②)；20260723c=选关底图换正典地点场景库①(紫蛇/灰塔/笼去霓虹剑)+无尽补深井底图；20260723b=残血脱穿装备无成本回血根治+图鉴闪卡/典藏版开关打架+塔防三合一静默吞装备+重置残留云撤销快照+IZ吃掉的⚠↩⤴⤵；20260723a=图鉴典藏版补齐(SP_FORMS 23→33全员)+分组按正典拆分(群星光明学徒/边缘黑域与中立)+"未来登场"改"群像"+典藏计数；20260716a=榜单顺畅三件套(赛季翻篇公告/历史赛季多期/结算顺手上榜/时钟不准可见提示)；20260713d=瑾正典性别纠错；20260713c=慧/音头目立绘
 /* ============ 数据 · 可操作角色（依据角色总录整理版） ============ */
 const CHARS={
   lin:{name:'琳',emoji:'🐈',rar:'SSR',role:'护剑人 · 剑弧',hp:110,atk:10,spd:2.6,wpn:'sword',
@@ -2884,8 +2884,8 @@ function bossArtURL(fid){return BOSS_ART[fid]||'';}
 const SCENE_DIR='assets/scenes/'; // 0723 正典地点场景库①(Codex 场景包①)
 // 0723 升级:一/二/最终话选关底图换用正典地点母版——紫蛇森林/灰塔换更贴正典的版本,
 //   笼中剑去掉旧图那把紫色霓虹剑(合 0722 品味军规);无尽「裂隙之底」补深井底图(原本没底图)。
-//   无名谷(4)暂无正典场景,保留 0712 旧图。缺图时 has-scene 的深底色兜底,不白。
-const STAGE_ART={0:SCENE_DIR+'snakewood-640.webp',1:SCENE_DIR+'graytower-640.webp',2:SCENE_DIR+'cage-640.webp',3:SCENE_DIR+'deepwell-640.webp',4:CHAP_DIR+'stage-4-namelessvale-640.webp'};
+//   无名谷(4)0723 换正典「无名之原」母版(无月旷野·四面黑潮·地上余烬),替下 0712 青绿占位。缺图时 has-scene 深底色兜底,不白。
+const STAGE_ART={0:SCENE_DIR+'snakewood-640.webp',1:SCENE_DIR+'graytower-640.webp',2:SCENE_DIR+'cage-640.webp',3:SCENE_DIR+'deepwell-640.webp',4:SCENE_DIR+'namelessvale-640.webp'};
 function stageBg(i){return STAGE_ART[i]?`background-image:linear-gradient(rgba(9,9,13,.58),rgba(9,9,13,.80)),url('${STAGE_ART[i]}');background-size:cover;background-position:center;`:'';}
 // 编年史章节海报（lore section key → 海报 basename）。缺图=onerror 隐藏，不影响文字。
 const CHAP_POSTER={prologue:'chapter-prologue',mysteries:'chapter-mask',bonds:'chapter-sacrifice',prophecy:'chapter-midsummer'};
